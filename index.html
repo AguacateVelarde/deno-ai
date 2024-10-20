@@ -1,40 +1,59 @@
-<!doctype html>
-<h2>WebSocket Test</h2>
-<p>Sends a ping every five seconds</p>
-<div id="output"></div>
-<script>
-  const wsUri = "ws://127.0.0.1/";
-  const output = document.querySelector("#output");
-  const websocket = new WebSocket(wsUri);
-  let pingInterval;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your own call center</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  function writeToScreen(message) {
-    output.insertAdjacentHTML("afterbegin", `<p>${message}</p>`);
-  }
+        body, html {
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
 
-  function sendMessage(message) {
-    writeToScreen(`SENT: ${message}`);
-    websocket.send(message);
-  }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            color: #333;
+        }
 
-  websocket.onopen = (e) => {
-    writeToScreen("CONNECTED");
-    sendMessage("ping");
-    pingInterval = setInterval(() => {
-      sendMessage("ping");
-    }, 5000);
-  };
+        .container {
+            text-align: center;
+        }
 
-  websocket.onclose = (e) => {
-    writeToScreen("DISCONNECTED");
-    clearInterval(pingInterval);
-  };
+        h1 {
+            font-size: 4rem;
+            color: #4a90e2;
+        }
 
-  websocket.onmessage = (e) => {
-    writeToScreen(`RECEIVED: ${e.data}`);
-  };
+        p {
+            font-size: 1.5rem;
+            color: #555;
+            margin-top: 1rem;
+        }
 
-  websocket.onerror = (e) => {
-    writeToScreen(`ERROR: ${e.data}`);
-  };
-</script>
+        a {
+            text-decoration: none;
+            color: #4a90e2;
+            font-weight: bold;
+        }
+
+        a:hover {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your own call center</h1>
+        <p>Find more on my GitHub: <a href="https://github.com/aguacatevelarde" target="_blank">@aguacatevelarde</a></p>
+    </div>
+</body>
+</html>

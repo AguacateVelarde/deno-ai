@@ -1,27 +1,36 @@
-Deno.serve({
-  port: 80,
-  handler: async (request) => {
-    // If the request is a websocket upgrade,
-    // we need to use the Deno.upgradeWebSocket helper
-    if (request.headers.get("upgrade") === "websocket") {
-      const { socket, response } = Deno.upgradeWebSocket(request);
+import { connectDatabase } from "./src/infra/mongo.ts";
+import { getRoutes } from "./src/controller.ts";
+import { GetRepositories } from "./src/infra/repository/index.ts";
+import { removeDomainFromUrl } from "./src/utils/clean-url.ts";
+import { logger } from "./src/infra/logger.ts";
 
-      socket.onopen = () => {
-        console.log("CONNECTED");
-      };
-      socket.onmessage = (event) => {
-        console.log(`RECEIVED: ${event.data}`);
-        socket.send("pong");
-      };
-      socket.onclose = () => console.log("DISCONNECTED");
-      socket.onerror = (error) => console.error("ERROR:", error);
+(async () => {
+  const database = await connectDatabase();
+  const routes = getRoutes();
+  const repositories = GetRepositories(database);
 
-      return response;
-    } else {
-      // If the request is a normal HTTP request,
-      // we serve the client HTML file.
-      const file = await Deno.open("./index.html", { read: true });
-      return new Response(file.readable);
-    }
-  },
-});
+  for (const route of routes) {
+    logger.log(`Loaded ${route.path}`);
+  }
+
+  Deno.serve({
+    port: 8080,
+    handler: async (request) => {
+      const route = routes.find((route) =>
+        route.path ===
+          removeDomainFromUrl(request.headers.get("host")!, request.url)
+      );
+      if (route) {
+        const response = await route.handler(request, repositories);
+        return response;
+      }
+
+      if (request.headers.get("upgrade") !== "websocket") {
+        const file = await Deno.open("./index.html", { read: true });
+        return new Response(file.readable);
+      }
+
+      return new Response("Not found", { status: 404 });
+    },
+  });
+})();
